@@ -14,8 +14,10 @@ var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
 var client_id = '3733069c4f074fc5b530bfbcab9530a3'; // Your client id
-var client_secret = ''; // Your secret
+var client_secret = process.env.SPOTIFY_SECRET; // Your secret
 var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var access_token = '';
+var user_id = '';
 
 /**
  * Generates a random string containing numbers and letters
@@ -89,8 +91,8 @@ app.get('/callback', function(req, res) {
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
 
-        var access_token = body.access_token,
-            refresh_token = body.refresh_token;
+        access_token = body.access_token;
+        var refresh_token = body.refresh_token;
 
         var options = {
           url: 'https://api.spotify.com/v1/me',
@@ -101,10 +103,10 @@ app.get('/callback', function(req, res) {
         var mikey;
         request.get(options, function(error, response, body) {
           mikey = body;
+          user_id = mikey['id'];
           // we can also pass the token to the browser to make requests from there
           res.redirect('/private/' +
-          mikey['id']  + '/' +
-          access_token + '/playlists');
+          mikey['id'] + '/playlists');
         });
 
         
@@ -141,6 +143,18 @@ app.get('/refresh_token', function(req, res) {
     }
   });
 });
+
+//make function to retrieve token, later on i can add utilizing the refresh token
+function retrieve_token() {
+  return access_token;
+}
+
+function retrieve_user_id() {
+  return user_id;
+}
+
+
+module.exports = {retrieve_token, retrieve_user_id};
 
 var routes = require('./routes/routes');
 
